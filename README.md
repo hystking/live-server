@@ -59,6 +59,7 @@ Command line parameters:
 * `--htpasswd=PATH` - Enables http-auth expecting htpasswd file located at PATH
 * `--cors` - Enables CORS for any origin (reflects request origin, requests with credentials are supported)
 * `--https=PATH` - PATH to a HTTPS configuration module
+* `--proxy=ROUTE:URL` - proxy all requests for ROUTE to URL
 * `--help | -h` - display terse usage hint and exit
 * `--version | -v` - display version and exit
 
@@ -126,6 +127,8 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 Version history
 ---------------
 
+* master (unreleased)
+	- Proxy support (@pavel)
 * v1.0.0
 	- HTTPS support (@pavel)
 	- HTTP Basic authentication support (@hey-johnnypark)

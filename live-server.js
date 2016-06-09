@@ -9,6 +9,7 @@ var opts = {
 	port: process.env.PORT,
 	open: true,
 	mount: [],
+	proxy: [],
 	logLevel: 2
 };
 
@@ -25,7 +26,7 @@ for (var i = process.argv.length - 1; i >= 2; --i) {
 	if (arg.indexOf("--port=") > -1) {
 		var portString = arg.substring(7);
 		var portNumber = parseInt(portString, 10);
-		if (portNumber == portString) {
+		if (portNumber === +portString) {
 			opts.port = portNumber;
 			process.argv.splice(i, 1);
 		}
@@ -89,7 +90,7 @@ for (var i = process.argv.length - 1; i >= 2; --i) {
 	else if (arg.indexOf("--wait=") > -1) {
 		var waitString = arg.substring(7);
 		var waitNumber = parseInt(waitString, 10);
-		if (waitNumber == waitString) {
+		if (waitNumber === +waitString) {
 			opts.wait = waitNumber;
 			process.argv.splice(i, 1);
 		}
@@ -111,8 +112,14 @@ for (var i = process.argv.length - 1; i >= 2; --i) {
 		opts.https = arg.substring(8);
 		process.argv.splice(i, 1);
 	}
+	else if (arg.indexOf("--proxy=") > -1) {
+		// split only on the first ":", as the URL will contain ":" as well
+		var match = arg.substring(8).match(/([^:]+):(.+)$/);
+		opts.proxy.push([ match[1], match[2] ]);
+		process.argv.splice(i, 1);
+	}
 	else if (arg === "--help" || arg === "-h") {
-		console.log('Usage: live-server [-v|--version] [-h|--help] [-q|--quiet] [--port=PORT] [--host=HOST] [--open=PATH] [--no-browser] [--browser=BROWSER] [--ignore=PATH] [--ignorePattern=RGXP] [--entry-file=PATH] [--spa] [--mount=ROUTE:PATH] [--wait=MILLISECONDS] [--htpasswd=PATH] [--cors] [--https=PATH] [PATH]');
+		console.log('Usage: live-server [-v|--version] [-h|--help] [-q|--quiet] [--port=PORT] [--host=HOST] [--open=PATH] [--no-browser] [--browser=BROWSER] [--ignore=PATH] [--ignorePattern=RGXP] [--entry-file=PATH] [--spa] [--mount=ROUTE:PATH] [--wait=MILLISECONDS] [--htpasswd=PATH] [--cors] [--https=PATH] [--proxy=PATH] [PATH]');
 		process.exit();
 	}
 	else if (arg === "--test") {
