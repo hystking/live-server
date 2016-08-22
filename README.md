@@ -47,12 +47,13 @@ Command line parameters:
 * `--host=ADDRESS` - select host address to bind to, default: IP env var or 0.0.0.0 ("any address")
 * `--no-browser` - suppress automatic web browser launching
 * `--browser=BROWSER` - specify browser to use instead of system default
-* `--quiet` - suppress logging
+* `--quiet | -q` - suppress logging
+* `--verbose | -V` - more logging (logs all requests, etc.)
 * `--open=PATH` - launch browser to PATH instead of server root
 * `--watch=PATH` - comma-separated string of paths to exclusively watch for changes (default: watch everything)
 * `--ignore=PATH` - comma-separated string of paths to ignore
 * `--ignorePattern=RGXP` - Regular expression of files to ignore (ie `.*\.jade`)
-* `--entry-file=PATH` - serve this file in place of missing files (useful for single page apps)
+* `--entry-file=PATH` - serve this file (server root relative) in place of missing files (useful for single page apps)
 * `--mount=ROUTE:PATH` - serve the paths contents under the defined route (multiple definitions possible)
 * `--spa` - translate requests from /abc to /#/abc (handy for Single Page Apps)
 * `--wait=MILLISECONDS` - wait for all changes, before reloading
@@ -83,7 +84,8 @@ var params = {
 	file: "index.html", // When set, serve this file for every 404 (useful for single-page applications)
 	wait: 1000, // Waits for all changes, before reloading. Defaults to 0 sec.
 	mount: [['/components', './node_modules']], // Mount a directory to a route.
-	logLevel: 2 // 0 = errors only, 1 = some, 2 = lots
+	logLevel: 2, // 0 = errors only, 1 = some, 2 = lots
+	middleware: [function(req, res, next) { next(); }] // Takes an array of Connect-compatible middleware that are injected into the server middleware stack
 };
 liveServer.start(params);
 ```
@@ -105,6 +107,9 @@ module.exports = {
 	passphrase: "12345"
 };
 ```
+
+If using the node API, you can also directly pass a configuration object instead of a path to the module.
+
 
 Troubleshooting
 ---------------
@@ -128,7 +133,13 @@ Version history
 ---------------
 
 * master (unreleased)
+	- Added `--verbose` cli option (logLevel 3) to log all requests and display warning when can't inject html file (@pavel)
+	- HTTPS configuration now also accepts a plain object (@pavel)
+* v1.1.0
 	- Proxy support (@pavel)
+	- Middleware support (@achandrasekar)
+	- Dependency updates (@tapio, @rahatarmanahmed)
+	- Using Travis CI
 * v1.0.0
 	- HTTPS support (@pavel)
 	- HTTP Basic authentication support (@hey-johnnypark)

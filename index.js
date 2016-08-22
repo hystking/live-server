@@ -72,7 +72,7 @@ function staticServer(root, spa) {
 						break;
 					}
 				}
-				if (injectTag === null && LiveServer.logLevel >= 2) {
+				if (injectTag === null && LiveServer.logLevel >= 3) {
 					console.warn("Failed to inject refresh script!".yellow,
 						"Couldn't find any of the tags ", injectCandidates, "from", filepath);
 				}
@@ -133,6 +133,7 @@ function entryPoint(staticHandler, file) {
  * @param file {string} Path to the entry point file
  * @param wait {number} Server will wait for all changes, before reloading
  * @param htpasswd {string} Path to htpasswd file to enable HTTP Basic authentication
+ * @param middleware {array} Append middleware to stack, e.g. [function(req, res, next) { next(); }].
  */
 LiveServer.start = function(options) {
 	options = options || {};
@@ -154,9 +155,22 @@ LiveServer.start = function(options) {
 	var cors = options.cors || false;
 	var https = options.https || null;
 	var proxy = options.proxy || [];
+	var middleware = options.middleware || [];
 
 	// Setup a web server
 	var app = connect();
+
+	// Add logger. Level 2 logs only errors
+	if (LiveServer.logLevel == 2) {
+		app.use(logger('dev', {
+			skip: function (req, res) { return res.statusCode < 400; }
+		}));
+	// Level 2 or above logs all requests
+	} else if (LiveServer.logLevel > 2) {
+		app.use(logger('dev'));
+	}
+	// Add middleware
+	middleware.map(app.use.bind(app));
 
 	// Use http-auth if configured
 	if (htpasswd !== null) {
@@ -184,6 +198,7 @@ LiveServer.start = function(options) {
 	proxy.forEach(function(proxyRule) {
 		var proxyOpts = url.parse(proxyRule[1]);
 		proxyOpts.via = true;
+		proxyOpts.preserveHost = true;
 		app.use(proxyRule[0], require('proxy-middleware')(proxyOpts));
 		if (LiveServer.logLevel >= 1)
 			console.log('Mapping %s to "%s"', proxyRule[0], proxyRule[1]);
@@ -191,12 +206,13 @@ LiveServer.start = function(options) {
 	app.use(staticServerHandler) // Custom static server
 		.use(entryPoint(staticServerHandler, file))
 		.use(serveIndex(root, { icons: true }));
-	if (LiveServer.logLevel >= 2)
-		app.use(logger('dev'));
 
 	var server, protocol;
 	if (https !== null) {
-		var httpsConfig = require(path.resolve(process.cwd(), https));
+		var httpsConfig = https;
+		if (typeof https === "string") {
+			httpsConfig = require(path.resolve(process.cwd(), https));
+		}
 		server = require("https").createServer(httpsConfig, app);
 		protocol = "https";
 	} else {
